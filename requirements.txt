@@ -1,0 +1,8 @@
+# Elasticsearch 2.x
+elasticsearch>=2.0.0,<3.0.0
+
+# NLP Library
+textblob>=0.10.0
+
+# Twitter library
+tweepy>=3.5.0
