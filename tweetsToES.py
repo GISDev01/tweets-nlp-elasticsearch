@@ -1,15 +1,16 @@
 import json
 
+#configlocal.py should exist in the same directory as this file with your Twitter API creds.
 from configlocal import *
 
 from tweepy.streaming import StreamListener
 from tweepy import OAuthHandler
 from tweepy import Stream
+
 from textblob import TextBlob
 
 from elasticsearch import Elasticsearch
 es = Elasticsearch()
-
 
 
 class TweetStreamListener(StreamListener):
@@ -19,9 +20,6 @@ class TweetStreamListener(StreamListener):
         #Load JSON payload into a dict to make it easy to parse out
         tweetDict = json.loads(data)
         tweetRawText = tweetDict["text"]
-        for key, value in tweetDict.iteritems() :
-            print key
-        #print tweetDict
         
         #Load the text of the tweet into a TextBlob so it can be analyzed
         tweetAnalyzed = TextBlob(tweetRawText)
