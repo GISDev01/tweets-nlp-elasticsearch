@@ -19,7 +19,9 @@ class TweetStreamListener(StreamListener):
         #Load JSON payload into a dict to make it easy to parse out
         tweetDict = json.loads(data)
         tweetRawText = tweetDict["text"]
-        #print tweetRawText
+        for key, value in tweetDict.iteritems() :
+            print key
+        #print tweetDict
         
         #Load the text of the tweet into a TextBlob so it can be analyzed
         tweetAnalyzed = TextBlob(tweetRawText)
@@ -46,9 +48,21 @@ class TweetStreamListener(StreamListener):
         es.index(index="twitteranalysis",
                     doc_type="tweet",
                     body={
+                        "msgid": tweetDict["id_str"],
+                        "timestamp_ms": tweetDict["timestamp_ms"],
                         "date": tweetDict["created_at"],
+                        "is_quote_status": tweetDict["is_quote_status"],
+                        "in_reply_to_status_id": tweetDict["in_reply_to_status_id"],
+                        "in_reply_to_screen_name": tweetDict["in_reply_to_screen_name"],
+                        "favorite_count": tweetDict["favorite_count"],
                         "author": tweetDict["user"]["screen_name"],
                         "tweetMsg": tweetDict["text"],
+                        "retweeted": tweetDict["retweeted"],
+                        "retweet_count": tweetDict["retweet_count"],
+                        "favorite_count": tweetDict["favorite_count"],
+                        "geo": tweetDict["geo"],
+                        "place": tweetDict["place"],
+                        "coordinates": tweetDict["coordinates"],
                         "polarity": tweetPolarity,
                         "subjectivity": tweetAnalyzed.sentiment.subjectivity,
                         "sentiment": sentiment
@@ -59,7 +73,11 @@ class TweetStreamListener(StreamListener):
 
 
     def on_error(self, status):
+        print "Fatal Error encountered"
         print status
+        
+        #Disconnect the stream
+        return False
 
 if __name__ == '__main__':
 
@@ -74,4 +92,4 @@ if __name__ == '__main__':
     twitterStream = Stream(twitterAuth, twitterListener)
 
     #Stream that is filered on keywords
-    twitterStream.filter(track=['olympics', 'running', 'triathlon'])
+    twitterStream.filter(track=['python', 'javascript', 'node', 'java', 'elasticsearch', 'data science'])

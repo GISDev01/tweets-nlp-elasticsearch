@@ -1,3 +1,2 @@
-env
-localconfig.py
+configlocal.py
 *.pyc
