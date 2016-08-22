@@ -24,11 +24,10 @@ class TweetStreamListener(StreamListener):
         #Load the text of the tweet into a TextBlob so it can be analyzed
         tweetAnalyzed = TextBlob(tweetRawText)
         
-        #Value between -1 and 1 - TextBlob Polarity explanation in layman's terms: http://planspace.org/20150607-textblob_sentiment/
-        
+        #Value between -1 and 1 - TextBlob Polarity explanation in layman's 
+        # terms: http://planspace.org/20150607-textblob_sentiment/
         tweetPolarity = tweetAnalyzed.sentiment.polarity
         
-
         if tweetPolarity == 0:
             sentiment = "Neutral"
         elif tweetPolarity < 0:
@@ -38,11 +37,11 @@ class TweetStreamListener(StreamListener):
         else:
             sentiment = "UNKNOWN"
         
-        
         print "TextBlob calc'ed Polarity: " + str(tweetPolarity)
         print "TextBlob Analysis Sentiment: " + sentiment
-
+            
         #Send Analyzed Tweet into ES Index for visualization in Kibana
+        #TODO: Error handling for ES Insert failure
         es.index(index="twitteranalysis",
                     doc_type="tweet",
                     body={
