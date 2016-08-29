@@ -1,2 +1,3 @@
 configlocal.py
 *.pyc
+tweetstream.json

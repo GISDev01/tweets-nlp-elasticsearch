@@ -39,12 +39,9 @@ class TweetStreamListener(StreamListener):
         
         print "TextBlob calc'ed Polarity: " + str(tweetPolarity)
         print "TextBlob Analysis Sentiment: " + sentiment
-            
-        #Send Analyzed Tweet into ES Index for visualization in Kibana
-        #TODO: Error handling for ES Insert failure
-        es.index(index="twitteranalysis",
-                    doc_type="tweet",
-                    body={
+        
+        
+        analyzedTweetDoc = {
                         "msgid": tweetDict["id_str"],
                         "timestamp_ms": tweetDict["timestamp_ms"],
                         "date": tweetDict["created_at"],
@@ -64,10 +61,13 @@ class TweetStreamListener(StreamListener):
                         "subjectivity": tweetAnalyzed.sentiment.subjectivity,
                         "sentiment": sentiment
                         }
-                )
-                
+        
+        
+        #can decide if you want to write the analyzed tweet to ES or a static file (or both)
+        writeTweetToJSON(analyzedTweetDoc)
+        writeTweetToElasticsearch(analyzedTweetDoc)
+        
         return True
-
 
     def on_error(self, status):
         print "Fatal Error encountered"
@@ -75,6 +75,29 @@ class TweetStreamListener(StreamListener):
         
         #Disconnect the stream
         return False
+
+
+
+        
+#helper functions for dealing with the processed tweet data 
+        
+def writeTweetToJSON(tweetData):
+    try:
+        with open('tweetstream.json', 'a') as file:
+            file.write(str(tweetData))
+    except BaseException as err:
+        print("Exception writing tweet to JSON File: %s" % str(err))
+        
+def writeTweetToElasticsearch(tweetData):
+    try:
+        #Send Analyzed Tweet into ES Index for visualization in Kibana
+        es.index(index = "twitteranalysis",
+                    doc_type = "tweet",
+                    body = tweetData
+                )
+    except BaseException as err:
+        print("Exception writing tweet to ES: %s" % str(err))
+
 
 if __name__ == '__main__':
 
@@ -89,4 +112,4 @@ if __name__ == '__main__':
     twitterStream = Stream(twitterAuth, twitterListener)
 
     #Stream that is filered on keywords
-    twitterStream.filter(track=['python', 'javascript', 'node', 'java', 'elasticsearch', 'data science'])
+    twitterStream.filter(track=['python', 'javascript', 'node', 'java', 'elasticsearch'])
