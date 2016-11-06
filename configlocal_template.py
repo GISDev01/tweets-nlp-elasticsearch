@@ -1,4 +1,4 @@
-#You can populate these after creating an App here: https://apps.twitter.com
+# You can populate these after creating an App here: https://apps.twitter.com
 
 twitter_consumer_key = ""
 twitter_consumer_secret = ""

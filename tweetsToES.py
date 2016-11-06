@@ -1,6 +1,7 @@
 import json
+import logging
 
-#configlocal.py should exist in the same directory as this file with your Twitter API creds.
+# configlocal.py should exist in the same directory as this file with your Twitter API creds.
 from configlocal import *
 
 from tweepy.streaming import StreamListener
@@ -10,24 +11,26 @@ from tweepy import Stream
 from textblob import TextBlob
 
 from elasticsearch import Elasticsearch
+
 es = Elasticsearch()
+logging.basicConfig(filename='log/TweetsToES.log',level=logging.DEBUG)
 
 
 class TweetStreamListener(StreamListener):
-
     def on_data(self, data):
-        
-        #Load JSON payload into a dict to make it easy to parse out
+
+        # Load JSON payload into a dict to make it easy to parse out
         tweetDict = json.loads(data)
         tweetRawText = tweetDict["text"]
-        
-        #Load the text of the tweet into a TextBlob so it can be analyzed
+
+        # Load the text of the tweet into a TextBlob so it can be analyzed
         tweetAnalyzed = TextBlob(tweetRawText)
-        
-        #Value between -1 and 1 - TextBlob Polarity explanation in layman's 
+
+        # Value between -1 and 1 - TextBlob Polarity explanation in layman's
         # terms: http://planspace.org/20150607-textblob_sentiment/
         tweetPolarity = tweetAnalyzed.sentiment.polarity
-        
+        logging.debug('Tweet Polarity: ', str(tweetPolarity))
+
         if tweetPolarity == 0:
             sentiment = "Neutral"
         elif tweetPolarity < 0:
@@ -36,80 +39,76 @@ class TweetStreamListener(StreamListener):
             sentiment = "Positive"
         else:
             sentiment = "UNKNOWN"
-        
+
         print "TextBlob calc'ed Polarity: " + str(tweetPolarity)
         print "TextBlob Analysis Sentiment: " + sentiment
-        
-        
+
         analyzedTweetDoc = {
-                        "msgid": tweetDict["id_str"],
-                        "timestamp_ms": tweetDict["timestamp_ms"],
-                        "date": tweetDict["created_at"],
-                        "is_quote_status": tweetDict["is_quote_status"],
-                        "in_reply_to_status_id": tweetDict["in_reply_to_status_id"],
-                        "in_reply_to_screen_name": tweetDict["in_reply_to_screen_name"],
-                        "favorite_count": tweetDict["favorite_count"],
-                        "author": tweetDict["user"]["screen_name"],
-                        "tweetMsg": tweetDict["text"],
-                        "retweeted": tweetDict["retweeted"],
-                        "retweet_count": tweetDict["retweet_count"],
-                        "favorite_count": tweetDict["favorite_count"],
-                        "geo": tweetDict["geo"],
-                        "place": tweetDict["place"],
-                        "coordinates": tweetDict["coordinates"],
-                        "polarity": tweetPolarity,
-                        "subjectivity": tweetAnalyzed.sentiment.subjectivity,
-                        "sentiment": sentiment
-                        }
-        
-        
-        #can decide if you want to write the analyzed tweet to ES or a static file (or both)
+            "msgid": tweetDict["id_str"],
+            "timestamp_ms": tweetDict["timestamp_ms"],
+            "date": tweetDict["created_at"],
+            "is_quote_status": tweetDict["is_quote_status"],
+            "in_reply_to_status_id": tweetDict["in_reply_to_status_id"],
+            "in_reply_to_screen_name": tweetDict["in_reply_to_screen_name"],
+            "favorite_count": tweetDict["favorite_count"],
+            "author": tweetDict["user"]["screen_name"],
+            "tweetMsg": tweetDict["text"],
+            "retweeted": tweetDict["retweeted"],
+            "retweet_count": tweetDict["retweet_count"],
+            "favorite_count": tweetDict["favorite_count"],
+            "geo": tweetDict["geo"],
+            "place": tweetDict["place"],
+            "coordinates": tweetDict["coordinates"],
+            "polarity": tweetPolarity,
+            "subjectivity": tweetAnalyzed.sentiment.subjectivity,
+            "sentiment": sentiment
+        }
+
+        # can decide if you want to write the analyzed tweet to ES or a static file (or both)
         writeTweetToJSON(analyzedTweetDoc)
         writeTweetToElasticsearch(analyzedTweetDoc)
-        
+
         return True
 
     def on_error(self, status):
         print "Fatal Error encountered"
         print status
-        
-        #Disconnect the stream
+
+        # Disconnect the stream
         return False
 
 
+# helper functions for dealing with the processed tweet data
 
-        
-#helper functions for dealing with the processed tweet data 
-        
 def writeTweetToJSON(tweetData):
     try:
         with open('tweetstream.json', 'a') as file:
             file.write(str(tweetData))
     except BaseException as err:
         print("Exception writing tweet to JSON File: %s" % str(err))
-        
+
+
 def writeTweetToElasticsearch(tweetData):
     try:
-        #Send Analyzed Tweet into ES Index for visualization in Kibana
-        es.index(index = "twitteranalysis",
-                    doc_type = "tweet",
-                    body = tweetData
-                )
+        # Send Analyzed Tweet into ES Index for visualization in Kibana
+        es.index(index="twitteranalysis",
+                 doc_type="tweet",
+                 body=tweetData
+                 )
     except BaseException as err:
         print("Exception writing tweet to ES: %s" % str(err))
 
 
 if __name__ == '__main__':
-
-    #Read twitter API access info from the config file
+    # Read twitter API access info from the config file
     twitterAuth = OAuthHandler(twitter_consumer_key, twitter_consumer_secret)
     twitterAuth.set_access_token(twitter_access_token, twitter_access_token_secret)
 
-    #Create an instance of the tweepy tweet stream listener
+    # Create an instance of the tweepy tweet stream listener
     twitterListener = TweetStreamListener()
 
-    #Create an instance of the tweepy raw stream
+    # Create an instance of the tweepy raw stream
     twitterStream = Stream(twitterAuth, twitterListener)
 
-    #Stream that is filered on keywords
+    # Stream that is filered on keywords
     twitterStream.filter(track=['python', 'javascript', 'node', 'java', 'elasticsearch'])

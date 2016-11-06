@@ -1,3 +1,5 @@
 configlocal.py
 *.pyc
 tweetstream.json
+log/TweetsToES.log
+.idea/
