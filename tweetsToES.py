@@ -4,18 +4,30 @@ A short script (Python 2.7) to ingest Twitter content into Elasticsearch in real
 
 import json
 import logging
+import os.path
 
-# config.py should exist in the same directory as this file with your Twitter API creds.
-from config import *
+import yaml
 from elasticsearch import Elasticsearch
 from textblob import TextBlob
-
 from tweepy import OAuthHandler
 from tweepy import Stream
 from tweepy.streaming import StreamListener
 
+# config.yml should exist in the same directory as this file
+if not os.path.isfile('config.yml'):
+    print 'You need to rename the config.yml.template to config.yml and insert your Twitter creds in the yaml config file'
+
+logs_dir_name = 'log'
+if not os.path.exists(logs_dir_name):
+    os.makedirs(logs_dir_name)
+
+FORMAT = '%(asctime)-15s %(levelname)s: %(message)s'
+logging.basicConfig(level=logging.INFO,
+                    format=FORMAT,
+                    filename=os.path.join(logs_dir_name, 'TweetsToES.log'))
+logger = logging.getLogger(__name__)
+
 es = Elasticsearch()
-logging.basicConfig(filename='log/TweetsToES.log', level=logging.DEBUG)
 
 
 class TweetStreamListener(StreamListener):
@@ -31,7 +43,7 @@ class TweetStreamListener(StreamListener):
         # Value between -1 and 1 - TextBlob Polarity explanation in layman's
         # terms: http://planspace.org/20150607-textblob_sentiment/
         text_polarity = tweet_text_blob.sentiment.polarity
-        logging.debug('Tweet Polarity: ', str(text_polarity))
+        logging.debug('Tweet Polarity: {}'.format(text_polarity))
 
         if text_polarity == 0:
             sentiment = "Neutral"
@@ -42,8 +54,7 @@ class TweetStreamListener(StreamListener):
         else:
             sentiment = "UNKNOWN"
 
-        print "TextBlob calc'ed Polarity: " + str(text_polarity)
-        print "TextBlob Analysis Sentiment: " + sentiment
+        logging.debug('TextBlob Analysis Sentiment: {}'.format(sentiment))
 
         analyzed_tweet = {
             "msgid": tweet_json["id_str"],
@@ -100,9 +111,12 @@ def write_analyzed_tweet_to_es(tweet_data):
 
 
 if __name__ == '__main__':
+    with open("config.yml", 'r') as yaml_config_file:
+        config = yaml.load(yaml_config_file)
+
     # Read twitter API access info from the config file
-    twitter_auth = OAuthHandler(twitter_consumer_key, twitter_consumer_secret)
-    twitter_auth.set_access_token(twitter_access_token, twitter_access_token_secret)
+    twitter_auth = OAuthHandler(config['twitter_consumer_key'], config['twitter_consumer_secret'])
+    twitter_auth.set_access_token(config['twitter_access_token'], config['twitter_access_token_secret'])
 
     # Create an instance of the tweepy tweet stream listener
     twitter_listener = TweetStreamListener()
