@@ -3,15 +3,21 @@ A short script (Python 2.7) to ingest Twitter content into Elasticsearch in real
 '''
 
 import json
-import logging
 import os.path
-
+import time
 import yaml
+
 from elasticsearch import Elasticsearch
+
 from textblob import TextBlob
+
 from tweepy import OAuthHandler
 from tweepy import Stream
 from tweepy.streaming import StreamListener
+
+import logging
+from logging import handlers
+import sys
 
 # config.yml should exist in the same directory as this file
 if not os.path.isfile('config.yml'):
@@ -21,11 +27,20 @@ logs_dir_name = 'log'
 if not os.path.exists(logs_dir_name):
     os.makedirs(logs_dir_name)
 
-FORMAT = '%(asctime)-15s %(levelname)s: %(message)s'
-logging.basicConfig(level=logging.INFO,
-                    format=FORMAT,
-                    filename=os.path.join(logs_dir_name, 'TweetsToES.log'))
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+LOG_FORMAT = logging.Formatter('%(asctime)-15s %(levelname)s: %(message)s')
+
+stdout_logger = logging.StreamHandler(sys.stdout)
+stdout_logger.setFormatter(LOG_FORMAT)
+logger.addHandler(stdout_logger)
+
+file_logger = handlers.RotatingFileHandler(os.path.join(logs_dir_name, 'TweetsToES.log'),
+                                           maxBytes=(1048576 * 5),
+                                           backupCount=5)
+file_logger.setFormatter(LOG_FORMAT)
+logger.addHandler(file_logger)
+
 
 es = Elasticsearch()
 
@@ -43,7 +58,7 @@ class TweetStreamListener(StreamListener):
         # Value between -1 and 1 - TextBlob Polarity explanation in layman's
         # terms: http://planspace.org/20150607-textblob_sentiment/
         text_polarity = tweet_text_blob.sentiment.polarity
-        logging.debug('Tweet Polarity: {}'.format(text_polarity))
+        logger.debug('Tweet Polarity: {}'.format(text_polarity))
 
         if text_polarity == 0:
             sentiment = "Neutral"
@@ -54,11 +69,11 @@ class TweetStreamListener(StreamListener):
         else:
             sentiment = "UNKNOWN"
 
-        logging.debug('TextBlob Analysis Sentiment: {}'.format(sentiment))
+        logger.debug('TextBlob Analysis Sentiment: {}'.format(sentiment))
 
         analyzed_tweet = {
             "msgid": tweet_json["id_str"],
-            "timestamp_ms": tweet_json["timestamp_ms"],
+            "tweet_timestamp_ms": tweet_json["timestamp_ms"],
             "date": tweet_json["created_at"],
             "is_quote_status": tweet_json["is_quote_status"],
             "in_reply_to_status_id": tweet_json["in_reply_to_status_id"],
@@ -73,7 +88,8 @@ class TweetStreamListener(StreamListener):
             "coordinates": tweet_json["coordinates"],
             "polarity": text_polarity,
             "subjectivity": tweet_text_blob.sentiment.subjectivity,
-            "sentiment": sentiment
+            "sentiment": sentiment,
+            "time_ingested": int(time.time())
         }
 
         # can decide if you want to write the analyzed tweet to ES or a static file (or both)
@@ -83,8 +99,7 @@ class TweetStreamListener(StreamListener):
         return True
 
     def on_error(self, status):
-        print "Fatal Error encountered"
-        print status
+        logger.error("Fatal Error: {}".format(status))
 
         # Disconnect the stream
         return False
@@ -96,7 +111,7 @@ def write_tweet_to_json_file(tweet_data):
         with open('tweetstream.json', 'a') as out_file:
             out_file.write(str(tweet_data))
     except BaseException as err:
-        print("Exception writing tweet to JSON File: %s" % str(err))
+        logger.exception("Exception writing tweet to JSON file: {}".format(err))
 
 
 def write_analyzed_tweet_to_es(tweet_data):
@@ -107,7 +122,7 @@ def write_analyzed_tweet_to_es(tweet_data):
                  body=tweet_data
                  )
     except BaseException as err:
-        print("Exception writing tweet to ES: %s" % str(err))
+        logger.exception("Exception writing tweet to ES: {}".format(err))
 
 
 if __name__ == '__main__':
@@ -118,12 +133,15 @@ if __name__ == '__main__':
     twitter_auth = OAuthHandler(config['twitter_consumer_key'], config['twitter_consumer_secret'])
     twitter_auth.set_access_token(config['twitter_access_token'], config['twitter_access_token_secret'])
 
+    logger.debug('Creating Listener')
     # Create an instance of the tweepy tweet stream listener
     twitter_listener = TweetStreamListener()
 
+    logger.debug('Creating Stream')
     # Create an instance of the tweepy raw stream
     tw_stream = Stream(twitter_auth, twitter_listener)
 
-    # Stream that is filrered on keywords
+    # Stream that is filtered on keywords
     # TODO: refactor keywords into config file
+    logger.debug('Starting the Filtered Stream')
     tw_stream.filter(track=['python', 'javascript', 'node', 'java', 'elasticsearch'])
