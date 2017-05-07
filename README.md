@@ -29,26 +29,19 @@ tagline: "You Know, for Search"
 
 Kibana: http://localhost:5601/
 Should return the Kibana Web GUI
+When we first open the Kibana Web GUI, we need to enter the text 'twitteranalysis' where it asks for the Index name or pattern on the Management tab (on the left).
 
-If not, you'll want to check the logs in your Docker container, and debug any startup or networking issues.
-
-There is 1 step you'll want to do when you load up the Kibana Web GUI. In the 'Add Index' prompt, put in "twitteranalysis".
-
-
-After cloning this repo, run pip install to get all of the Python libraries:
+After cloning this repo, we can run pip install to get all of the Python libraries:
 `pip install -r requirements.txt`
 
 Python libraries used:
-
-https://github.com/sloria/textblob (https://textblob.readthedocs.io/en/dev/)
-
-https://github.com/tweepy/tweepy (http://tweepy.readthedocs.io/en/v3.5.0/)
-
+https://github.com/sloria/textblob
+https://github.com/tweepy/tweepy
 https://elasticsearch-py.readthedocs.io/en/master/api.html
 
-
-After filling in your Twitter API credentials in the config.yaml (rename the config.yaml.template to config.yaml), you can let the script run for a few minutes and load up the Index in Elasticsearch. After some data is loaded up in Elasticsearch, try a few URLs like this:
+After filling in your Twitter API credentials in the config.yml (rename the config.yml.template to config.yml), you can let the script run for a few minutes and load up the Index in Elasticsearch. After some data is loaded up in Elasticsearch, try a few URLs like this:
 
 http://localhost:9200/twitteranalysis/_search?q=python
-
 http://localhost:9200/twitteranalysis/_search?q=sentiment:Positive&message=python
+
+Feel free to email me if you have any problems getting this up and running. 
