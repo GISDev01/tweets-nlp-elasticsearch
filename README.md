@@ -47,7 +47,7 @@ https://github.com/tweepy/tweepy (http://tweepy.readthedocs.io/en/v3.5.0/)
 https://elasticsearch-py.readthedocs.io/en/master/api.html
 
 
-After filling in your Twitter API credentials in the config.py, you can let the script run for a few minutes and load up the Index in Elasticsearch. After some data is loaded up in Elasticsearch, try a few URLs like this:
+After filling in your Twitter API credentials in the config.yaml (rename the config.yaml.template to config.yaml), you can let the script run for a few minutes and load up the Index in Elasticsearch. After some data is loaded up in Elasticsearch, try a few URLs like this:
 
 http://localhost:9200/twitteranalysis/_search?q=python
 
