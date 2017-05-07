@@ -1,4 +1,4 @@
-configlocal.py
+config.yml
 *.pyc
 tweetstream.json
 log/TweetsToES.log
