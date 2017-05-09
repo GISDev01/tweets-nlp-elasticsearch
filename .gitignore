@@ -1,5 +1,5 @@
 config.yml
 *.pyc
 tweetstream.json
-log/TweetsToES.log
+log/
 .idea/
