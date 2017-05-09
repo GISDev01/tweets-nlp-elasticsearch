@@ -3,21 +3,18 @@ A short script (Python 2.7) to ingest Twitter content into Elasticsearch in real
 '''
 
 import json
+import logging
 import os.path
+import sys
 import time
+from logging import handlers
+
 import yaml
-
 from elasticsearch import Elasticsearch
-
 from textblob import TextBlob
-
 from tweepy import OAuthHandler
 from tweepy import Stream
 from tweepy.streaming import StreamListener
-
-import logging
-from logging import handlers
-import sys
 
 # config.yml should exist in the same directory as this file
 if not os.path.isfile('config.yml'):
@@ -41,7 +38,6 @@ file_logger = handlers.RotatingFileHandler(os.path.join(logs_dir_name, 'TweetsTo
 file_logger.setFormatter(LOG_FORMAT)
 logger.addHandler(file_logger)
 
-
 es = Elasticsearch()
 
 
@@ -50,6 +46,11 @@ class TweetStreamListener(StreamListener):
 
         # Load JSON payload into a dict to make it easy to parse out
         tweet_json = json.loads(data)
+
+        # short-circuit exit if no text is found in the tweet item
+        if 'text' not in tweet_json.keys():
+            return True
+
         tweet_raw_text = tweet_json["text"]
 
         # Load the text of the tweet into a TextBlob so it can be analyzed
@@ -58,7 +59,9 @@ class TweetStreamListener(StreamListener):
         # Value between -1 and 1 - TextBlob Polarity explanation in layman's
         # terms: http://planspace.org/20150607-textblob_sentiment/
         text_polarity = tweet_text_blob.sentiment.polarity
-        logger.debug('Tweet Polarity: {}'.format(text_polarity))
+        logger.debug(
+            'Tweet Polarity: {} - on Tweet Text: {}'.format(text_polarity,
+                                                            tweet_raw_text.encode('UTF-8', 'replace')))
 
         if text_polarity == 0:
             sentiment = "Neutral"
@@ -92,7 +95,7 @@ class TweetStreamListener(StreamListener):
             "time_ingested": int(time.time())
         }
 
-        # can decide if you want to write the analyzed tweet to ES or a static file (or both)
+        # can decide if we want to write the analyzed tweet to ES or a static file (or both)
         write_tweet_to_json_file(analyzed_tweet)
         write_analyzed_tweet_to_es(analyzed_tweet)
 
@@ -144,4 +147,8 @@ if __name__ == '__main__':
     # Stream that is filtered on keywords
     # TODO: refactor keywords into config file
     logger.debug('Starting the Filtered Stream')
-    tw_stream.filter(track=['python', 'javascript', 'node', 'java', 'elasticsearch'])
+
+    twitter_terms_to_track = config['twitter_terms_to_track']
+    logger.info('Tracking Terms: {}'.format(twitter_terms_to_track))
+
+    tw_stream.filter(track=twitter_terms_to_track, languages=['en'])
