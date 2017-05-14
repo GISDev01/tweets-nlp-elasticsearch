@@ -49,6 +49,7 @@ class TweetStreamListener(StreamListener):
 
         # short-circuit exit if no text is found in the tweet item
         if 'text' not in tweet_json.keys():
+            logger.warning('Text not found in this tweet. Skipping it.')
             return True
 
         tweet_raw_text = tweet_json["text"]
