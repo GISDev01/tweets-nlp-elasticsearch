@@ -76,15 +76,15 @@ class TweetStreamListener(StreamListener):
         logger.debug('TextBlob Analysis Sentiment: {}'.format(sentiment))
 
         analyzed_tweet = {
-            "msgid": tweet_json["id_str"],
+            "tweet_id": tweet_json["id_str"],
             "tweet_timestamp_ms": tweet_json["timestamp_ms"],
-            "date": tweet_json["created_at"],
+            "tweet_date": tweet_json["created_at"],
             "is_quote_status": tweet_json["is_quote_status"],
             "in_reply_to_status_id": tweet_json["in_reply_to_status_id"],
             "in_reply_to_screen_name": tweet_json["in_reply_to_screen_name"],
             "favorite_count": tweet_json["favorite_count"],
             "author": tweet_json["user"]["screen_name"],
-            "tweetMsg": tweet_json["text"],
+            "tweet_text": tweet_json["text"],
             "retweeted": tweet_json["retweeted"],
             "retweet_count": tweet_json["retweet_count"],
             "geo": tweet_json["geo"],
@@ -93,6 +93,7 @@ class TweetStreamListener(StreamListener):
             "polarity": text_polarity,
             "subjectivity": tweet_text_blob.sentiment.subjectivity,
             "sentiment": sentiment,
+            # Current Epoch Time
             "time_ingested": int(time.time())
         }
 
@@ -146,7 +147,6 @@ if __name__ == '__main__':
     tw_stream = Stream(twitter_auth, twitter_listener)
 
     # Stream that is filtered on keywords
-    # TODO: refactor keywords into config file
     logger.debug('Starting the Filtered Stream')
 
     twitter_terms_to_track = config['twitter_terms_to_track']
