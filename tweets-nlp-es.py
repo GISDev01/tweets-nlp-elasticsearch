@@ -1,24 +1,38 @@
-'''
-A short script (Python 2.7) to ingest Twitter content into Elasticsearch in realtime.
-'''
+"""
+Purpose: Insert tweets into Elasticsearch cluster and visualize the results in Kibana.
+Python 2.7
+1. pip install -r requirements
+2. cp config.yml.template config.yml
+3. nano config.yml
+4. Paste your Twitter API credentials into the config.yml
+5. Make sure the ELK stack is up and running.
+6. Run this script to ingest targeted tweets into Elasticsearch in realtime
+7. Visualize the NLP results in Kibana
+"""
 
 import json
 import logging
 import os.path
 import sys
 import time
+
 from logging import handlers
 
 import yaml
+
 from elasticsearch import Elasticsearch
+
 from textblob import TextBlob
+
 from tweepy import OAuthHandler
 from tweepy import Stream
 from tweepy.streaming import StreamListener
 
 # config.yml should exist in the same directory as this file
 if not os.path.isfile('config.yml'):
-    print 'You need to rename the config.yml.template to config.yml and insert your Twitter creds in the yaml config file'
+    print 'config.yml was not found. You probably need to rename the config.yml.template to config.yml ' \
+          'and insert your Twitter credentials in this config file'
+    sys.exit()
 
 logs_dir_name = 'log'
 if not os.path.exists(logs_dir_name):
@@ -32,9 +46,9 @@ stdout_logger = logging.StreamHandler(sys.stdout)
 stdout_logger.setFormatter(LOG_FORMAT)
 logger.addHandler(stdout_logger)
 
-file_logger = handlers.RotatingFileHandler(os.path.join(logs_dir_name, 'TweetsToES.log'),
+file_logger = handlers.RotatingFileHandler(os.path.join(logs_dir_name, 'tweets-nlp-es.log'),
                                            maxBytes=(1048576 * 5),
-                                           backupCount=5)
+                                           backupCount=3)
 file_logger.setFormatter(LOG_FORMAT)
 logger.addHandler(file_logger)
 
@@ -75,6 +89,9 @@ class TweetStreamListener(StreamListener):
 
         logger.debug('TextBlob Analysis Sentiment: {}'.format(sentiment))
 
+        # TODO: Refactor to class and loop through list of same keys
+        # Track re-named object keys in a dict for better readability (eg. orig_key: new_key)
+
         analyzed_tweet = {
             "tweet_id": tweet_json["id_str"],
             "tweet_timestamp_ms": tweet_json["timestamp_ms"],
@@ -93,8 +110,7 @@ class TweetStreamListener(StreamListener):
             "polarity": text_polarity,
             "subjectivity": tweet_text_blob.sentiment.subjectivity,
             "sentiment": sentiment,
-            # Current Epoch Time
-            "time_ingested": int(time.time())
+            "epoch_time_ingested": int(time.time())
         }
 
         # can decide if we want to write the analyzed tweet to ES or a static file (or both)
@@ -105,7 +121,6 @@ class TweetStreamListener(StreamListener):
 
     def on_error(self, status):
         logger.error("Fatal Error: {}".format(status))
-
         # Disconnect the stream
         return False
 
@@ -130,9 +145,18 @@ def write_analyzed_tweet_to_es(tweet_data):
         logger.exception("Exception writing tweet to ES: {}".format(err))
 
 
+def get_config():
+    try:
+        with open("config.yml", 'r') as yaml_config_file:
+            _config = yaml.load(yaml_config_file)
+        return _config
+    except:
+        logger.exception('config.yml file cannot be found or read. '
+                         'You might need to fill in the the config.yml.template and then rename it to config.yml')
+
+
 if __name__ == '__main__':
-    with open("config.yml", 'r') as yaml_config_file:
-        config = yaml.load(yaml_config_file)
+    config = get_config()
 
     # Read twitter API access info from the config file
     twitter_auth = OAuthHandler(config['twitter_consumer_key'], config['twitter_consumer_secret'])
