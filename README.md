@@ -1,5 +1,5 @@
 # A Python 2.7 project to load realtime filtered Twitter API data into Elasticsearch, and then visualize the results in Kibana. 
-Uses an ELK (Elasticsearch/Logstash/Kibana) 6.1.1 Docker container for easy reproducibility. Tested with Python 2.7 (Anaconda Distro) on Win10.
+Uses an ELK (Elasticsearch/Logstash/Kibana) 6.1.1 Docker container for easy reproducibility. Tested with Python 2.7 (Anaconda Distro) on Win10 and MacOS 10.13.2.
 
 To get Elasticsearch and Kibana up and running locally quickly, run these 2 docker commands.
 
