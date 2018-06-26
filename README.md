@@ -1,20 +1,22 @@
 # A Python 2.7 project to load realtime filtered Twitter API data into Elasticsearch, and then visualize the results in Kibana. 
-Uses an ELK (Elasticsearch/Logstash/Kibana) 6.1.1 Docker container for easy reproducibility. Tested with Python 2.7 (Anaconda Distro) on Win10 and MacOS 10.13.2.
+Uses an ELK (Elasticsearch/Logstash/Kibana) 6.3.0 Docker container for easy reproducibility. 
+Tested with Python 2.7 (Anaconda Distro) on Win10 and MacOS 10.13.3.
 
 To get Elasticsearch and Kibana up and running locally quickly, run these 2 docker commands.
 
-Note: If we're going to run this docker container, make sure you have at least 4GB of RAM assigned to Docker. Second, we must increase the limit on mmap counts equal to 262,144 or more on Mac or Linux (I implement this fix in the below Mac command). See here for more info on this:
+Note: Make sure you have at least 4GB of RAM assigned to Docker. Second, increase the limit on mmap counts equal to 262,144 or more on Mac or Linux (I implement this workaround in the below Mac command). See here for more info on this:
 http://elk-docker.readthedocs.io/
+Warning: Do not pull this public image on a low-bandwidth or metered Internet connection. It pulls down well over 5GB of traffic, total.
 ```
-docker pull sebp/elk:611
+docker pull sebp/elk:630
 ```
 Windows:
 ```
-docker run -p 5601:5601 -p 9200:9200 -p 5044:5044 -p 5000:5000 -it --name elk sebp/elk:611
+docker run -p 5601:5601 -p 9200:9200 -p 5044:5044 -p 5000:5000 -it --name elk sebp/elk:630
 ```
 Mac:
 ```
-docker run -p 5601:5601 -p 9200:9200 -p 5044:5044 -p 5000:5000 -e MAX_MAP_COUNT="262144" -it --name elk sebp/elk:611
+docker run -p 5601:5601 -p 9200:9200 -p 5044:5044 -p 5000:5000 -e MAX_MAP_COUNT="262144" -it --name elk sebp/elk:630
 ```
 More info on this Docker container can be found here: https://hub.docker.com/r/sebp/elk/
 
@@ -29,7 +31,7 @@ Should return a similar response to this:
   "cluster_name" : "elasticsearch",
   "cluster_uuid" : "randomstring2",
   "version" : {
-    "number" : "6.1.1",
+    "number" : "6.3.0",
     "build_hash" : "bd92e7f",
     "build_date" : "2017-12-17T20:23:25.338Z",
     "build_snapshot" : false,
