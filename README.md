@@ -32,10 +32,12 @@ Should return a similar response to this:
   "cluster_uuid" : "randomstring2",
   "version" : {
     "number" : "6.3.2",
-    "build_hash" : "bd92e7f",
-    "build_date" : "2017-12-17T20:23:25.338Z",
+    "build_flavor" : "default",
+    "build_type" : "tar",
+    "build_hash" : "053779d",
+    "build_date" : "2018-07-20T05:20:23.451332Z",
     "build_snapshot" : false,
-    "lucene_version" : "7.1.0",
+    "lucene_version" : "7.3.1",
     "minimum_wire_compatibility_version" : "5.6.0",
     "minimum_index_compatibility_version" : "5.0.0"
   },
