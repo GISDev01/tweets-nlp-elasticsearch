@@ -1,5 +1,5 @@
 # A Python 2.7 project to load realtime filtered Twitter API data into Elasticsearch, and then visualize the results in Kibana. 
-Uses an ELK (Elasticsearch/Logstash/Kibana) 6.3.2 Docker container for easy reproducibility. 
+Uses an ELK (Elasticsearch/Logstash/Kibana) 7.0.1 Docker container for easy reproducibility. 
 Tested with Python 2.7 (Anaconda Distro) on Win10 and MacOS 10.13.3.
 
 To get Elasticsearch and Kibana up and running locally quickly, run these 2 docker commands.
@@ -8,15 +8,15 @@ Note: Make sure you have at least 4GB of RAM assigned to Docker. Second, increas
 http://elk-docker.readthedocs.io/
 Warning: Do not pull this public image on a low-bandwidth or metered Internet connection. It pulls down well over 5GB of traffic, total.
 ```
-docker pull sebp/elk:632
+docker pull sebp/elk:701
 ```
 Windows:
 ```
-docker run -p 5601:5601 -p 9200:9200 -p 5044:5044 -p 5000:5000 -it --name elk sebp/elk:632
+docker run -p 5601:5601 -p 9200:9200 -p 5044:5044 -p 5000:5000 -it --name elk sebp/elk:701
 ```
 Mac:
 ```
-docker run -p 5601:5601 -p 9200:9200 -p 5044:5044 -p 5000:5000 -e MAX_MAP_COUNT="262144" -it --name elk sebp/elk:632
+docker run -p 5601:5601 -p 9200:9200 -p 5044:5044 -p 5000:5000 -e MAX_MAP_COUNT="262144" -it --name elk sebp/elk:701
 ```
 More info on this Docker container can be found here: https://hub.docker.com/r/sebp/elk/
 
@@ -31,7 +31,7 @@ Should return a similar response to this:
   "cluster_name" : "elasticsearch",
   "cluster_uuid" : "randomstring2",
   "version" : {
-    "number" : "6.3.2",
+    "number" : "7.0.1",
     "build_flavor" : "default",
     "build_type" : "tar",
     "build_hash" : "053779d",
