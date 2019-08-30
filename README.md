@@ -27,19 +27,19 @@ Elasticsearch: http://localhost:9200/
 Which should return a similar response to this:
 ~~~
 {
-  "name" : "randomstring",
+  "name" : "elk",
   "cluster_name" : "elasticsearch",
-  "cluster_uuid" : "randomstring2",
+  "cluster_uuid" : "randomstring",
   "version" : {
-    "number" : "7.2.0",
+    "number" : "7.2.1",
     "build_flavor" : "default",
     "build_type" : "tar",
-    "build_hash" : "053779d",
-    "build_date" : "2018-07-20T05:20:23.451332Z",
+    "build_hash" : "fe6cb20",
+    "build_date" : "2019-07-24T17:58:29.979462Z",
     "build_snapshot" : false,
-    "lucene_version" : "7.3.1",
-    "minimum_wire_compatibility_version" : "5.6.0",
-    "minimum_index_compatibility_version" : "5.0.0"
+    "lucene_version" : "8.0.0",
+    "minimum_wire_compatibility_version" : "6.8.0",
+    "minimum_index_compatibility_version" : "6.0.0-beta1"
   },
   "tagline" : "You Know, for Search"
 }
