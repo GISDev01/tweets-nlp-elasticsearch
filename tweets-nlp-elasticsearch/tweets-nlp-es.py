@@ -145,7 +145,7 @@ def write_analyzed_tweet_to_es(tweet_data):
 def get_config():
     try:
         with open(os.path.join("config", "config.yml"), "r") as yaml_config_file:
-            _config = yaml.load(yaml_config_file)
+            _config = yaml.load(yaml_config_file, Loader=yaml.SafeLoader)
         return _config
     except:
         logger.exception('config.yml file cannot be found or read. '
