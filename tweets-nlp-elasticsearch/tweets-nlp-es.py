@@ -1,12 +1,12 @@
 """
 Purpose: Insert tweets into Elasticsearch cluster and visualize the results in Kibana.
-Python 2.7
+Python 3.6
 1. pip install -r requirements
-2. cp config.yml.template config.yml
-3. nano config.yml
+2. cp ./config/config.yml.template ./config/config.yml
+3. nano ./config/config.yml
 4. Paste your Twitter API credentials into the config.yml
-5. Make sure the ELK stack is up and running.
-6. Run this script to ingest targeted tweets into Elasticsearch in realtime
+5. Make sure the ELK 7.x stack is up and running.
+6. Run this script to ingest filtered tweets into Elasticsearch in realtime
 7. Visualize the NLP results in Kibana
 """
 
@@ -29,9 +29,9 @@ from tweepy import Stream
 from tweepy.streaming import StreamListener
 
 # config.yml should exist in the same directory as this file
-if not os.path.isfile('config.yml'):
-    print 'config.yml was not found. You probably need to rename the config.yml.template to config.yml ' \
-          'and insert your Twitter credentials in this config file'
+if not os.path.isfile(os.path.join('config', 'config.yml')):
+    print('config.yml was not found. You probably need to rename the config.yml.template to config.yml ' +
+          'and insert your Twitter credentials in this config file')
     sys.exit()
 
 logs_dir_name = 'log'
@@ -89,9 +89,6 @@ class TweetStreamListener(StreamListener):
 
         logger.debug('TextBlob Analysis Sentiment: {}'.format(sentiment))
 
-        # TODO: Refactor to class and loop through list of same keys
-        # Track re-named object keys in a dict for better readability (eg. orig_key: new_key)
-
         analyzed_tweet = {
             "tweet_id": tweet_json["id_str"],
             "tweet_timestamp_ms": tweet_json["timestamp_ms"],
@@ -147,7 +144,7 @@ def write_analyzed_tweet_to_es(tweet_data):
 
 def get_config():
     try:
-        with open("config.yml", 'r') as yaml_config_file:
+        with open(os.path.join("config", "config.yml"), "r") as yaml_config_file:
             _config = yaml.load(yaml_config_file)
         return _config
     except:
