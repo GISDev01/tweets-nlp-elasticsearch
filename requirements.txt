@@ -1,5 +1,5 @@
 elasticsearch>=5.0.0,<6.0.0
-nltk==3.4.5
+nltk==3.6.6
 oauthlib==2.0.2
 PyYAML==5.4
 requests==2.31.0
